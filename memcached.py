@@ -78,6 +78,8 @@ def update_stats():
         client.open(**config)
         stats.update(query('stats'))
         ages = [v for k, v in query('stats items') if k.endswith('age')]
+        if not ages:
+            return {'age_min': 0, 'age_max': 0, 'age_mean': 0, 'age_median': 0}
         stats.update({
             'age_min'    : min(ages),
             'age_max'    : max(ages),
