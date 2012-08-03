@@ -20,7 +20,7 @@
     :author: Ori Livneh <ori@wikimedia.org>
     :license: GPL
 """
-from __future__ import division
+from __future__ import division, print_function
 
 import json
 import telnetlib
@@ -63,9 +63,9 @@ def cast(value):
 
 def query(command):
     """Send `command` to memcached and stream response"""
-    client.write(command + '\n')
+    client.write(command.encode('ascii') + b'\n')
     while True:
-        line = client.read_until('\n').strip()
+        line = client.read_until(b'\r\n').decode('ascii').strip()
         if not line or line == 'END':
             break
         (_, metric, value) = line.split(None, 2)
@@ -93,7 +93,7 @@ def update_stats():
 
 def metric_init(params):
     """Initialize; part of Gmond interface"""
-    print '[memcached] memcached stats'
+    print('[memcached] memcached stats')
     config.update(params)
     with open(config.pop('defs'), 'rt') as f:
         descriptors = json.load(f)
@@ -126,11 +126,11 @@ if __name__ == '__main__':
     # metric descriptor and printing it out.
     from time import sleep
 
-    print "Polling 127.0.0.1:11211 with a 5 second interval:\n"
+    print("Polling 127.0.0.1:11211 with a 5 second interval:\n")
     params = config.copy()
     while True:
         for metric in metric_init(params):
             value = metric['call_back'](metric['name'])
-            print ( "%s => " + metric['format'] ) % ( metric['name'], value )
-        print
+            print(( "%s => " + metric['format'] ) % ( metric['name'], value ))
+        print('')
         sleep(5)
