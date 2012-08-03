@@ -22,11 +22,8 @@
 """
 from __future__ import division
 
-import os
 import json
 import telnetlib
-import time
-
 
 # Default configuration
 config = {
@@ -117,7 +114,6 @@ def metric_handler(name):
         update_stats()
         return stats[name]
     return value
-    return stats[name]
 
 
 def metric_cleanup():
@@ -128,6 +124,8 @@ def metric_cleanup():
 if __name__ == '__main__':
     # When invoked as standalone script, run a self-test by querying each
     # metric descriptor and printing it out.
+    from time import sleep
+
     print "Polling 127.0.0.1:11211 with a 5 second interval:\n"
     params = config.copy()
     while True:
@@ -135,4 +133,4 @@ if __name__ == '__main__':
             value = metric['call_back'](metric['name'])
             print ( "%s => " + metric['format'] ) % ( metric['name'], value )
         print
-        time.sleep(5)
+        sleep(5)
