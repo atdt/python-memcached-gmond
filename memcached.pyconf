@@ -1,3 +1,6 @@
+# Gmond configuration for memcached metric module
+# Install to /etc/ganglia/conf.d
+
 modules {
   module {
     name = "memcached"
