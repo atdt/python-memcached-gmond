@@ -22,16 +22,23 @@
 """
 from __future__ import division, print_function
 
-import json
+import os
+import sys
 import telnetlib
+
+
+# Hack: load a file from the current module's directory, because gmond doesn't
+# know how to work with Python packages. (To be fair, neither does Python.)
+sys.path.insert(0, os.path.dirname(__file__))
+from memcached_metrics import descriptors
+sys.path.pop(0)
+
 
 # Default configuration
 config = {
     'host' : '127.0.0.1',
     'port' : 11211,
-    'defs' : './memcached-metrics.json'
 }
-
 
 stats = {}
 client = telnetlib.Telnet()
@@ -97,8 +104,6 @@ def metric_init(params):
     """Initialize; part of Gmond interface"""
     print('[memcached] memcached stats')
     config.update(params)
-    with open(config.pop('defs'), 'rt') as f:
-        descriptors = json.load(f)
     for metric in descriptors:
         metric['call_back'] = metric_handler
     return descriptors
@@ -126,13 +131,6 @@ def metric_cleanup():
 if __name__ == '__main__':
     # When invoked as standalone script, run a self-test by querying each
     # metric descriptor and printing it out.
-    from time import sleep
-
-    print("Polling 127.0.0.1:11211 with a 5 second interval:\n")
-    params = config.copy()
-    while True:
-        for metric in metric_init(params):
-            value = metric['call_back'](metric['name'])
-            print(( "%s => " + metric['format'] ) % ( metric['name'], value ))
-        print('')
-        sleep(5)
+    for metric in metric_init({}):
+        value = metric['call_back'](metric['name'])
+        print(( "%s => " + metric['format'] ) % ( metric['name'], value ))

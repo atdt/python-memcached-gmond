@@ -1,5 +1,7 @@
-[
-    {
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+descriptors = [ {
         "slope": "both", 
         "time_max": 60, 
         "description": "Current number of items stored by this instance", 
