@@ -9,7 +9,7 @@
     http://sourceforge.net/apps/trac/ganglia/wiki/ganglia_gmond_python_modules
 
     When invoked as a standalone script, this module will attempt to use the
-    default configuration to query memcached every 5 seconds and print out the
+    default configuration to query memcached every 10 seconds and print out the
     results.
 
     Based on a suggestion from Domas Mitzuas, this module also reports the min,
@@ -22,7 +22,11 @@
 """
 from __future__ import division, print_function
 
+from threading import Timer
+
+import logging
 import os
+import pprint
 import sys
 import telnetlib
 
@@ -31,6 +35,7 @@ import telnetlib
 # know how to work with Python packages. (To be fair, neither does Python.)
 sys.path.insert(0, os.path.dirname(__file__))
 from memcached_metrics import descriptors
+from every import every
 sys.path.pop(0)
 
 
@@ -79,6 +84,7 @@ def query(command):
         yield metric, cast(value)
 
 
+@every(seconds=10)
 def update_stats():
     """Refresh stats by polling memcached server"""
     try:
@@ -95,9 +101,16 @@ def update_stats():
         })
     finally:
         client.close()
+    logging.info("Updated stats: %s", pprint.pformat(stats, indent=4))
 
 
-## Gmond interface (metric_init, metric_handler, metric_close)
+#
+# Gmond Interface
+#
+
+def metric_handler(name):
+    """Get the value for a particular metric; part of Gmond interface"""
+    return stats[name]
 
 
 def metric_init(params):
@@ -109,20 +122,6 @@ def metric_init(params):
     return descriptors
 
 
-def metric_handler(name):
-    """
-    Get the value for a particular metric. Asking for a metric twice triggers
-    an update. This ensures memcached is queried once per gmond poll. This
-    function is specified as the 'call_back' for each metric descriptor. Part
-    of Gmond interface.
-    """
-    value = stats.pop(name, None)
-    if value is None:
-        update_stats()
-        return stats[name]
-    return value
-
-
 def metric_cleanup():
     """Teardown; part of Gmond interface"""
     client.close()
@@ -131,6 +130,8 @@ def metric_cleanup():
 if __name__ == '__main__':
     # When invoked as standalone script, run a self-test by querying each
     # metric descriptor and printing it out.
+    logging.basicConfig(level=logging.DEBUG)
     for metric in metric_init({}):
         value = metric['call_back'](metric['name'])
         print(( "%s => " + metric['format'] ) % ( metric['name'], value ))
+    every.join()
