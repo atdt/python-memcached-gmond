@@ -30,6 +30,7 @@ import pprint
 import sys
 import telnetlib
 
+logging.basicConfig(level=logging.DEBUG)
 
 # Hack: load a file from the current module's directory, because gmond doesn't
 # know how to work with Python packages. (To be fair, neither does Python.)
@@ -130,7 +131,6 @@ def metric_cleanup():
 if __name__ == '__main__':
     # When invoked as standalone script, run a self-test by querying each
     # metric descriptor and printing it out.
-    logging.basicConfig(level=logging.DEBUG)
     for metric in metric_init({}):
         value = metric['call_back'](metric['name'])
         print(( "%s => " + metric['format'] ) % ( metric['name'], value ))
