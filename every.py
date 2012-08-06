@@ -9,6 +9,7 @@
     :copyright: (c) 2012 Wikimedia Foundation
     :license: GPL, version 2 or later
 """
+from __future__ import division
 from datetime import timedelta
 import signal
 import sys
@@ -20,6 +21,14 @@ import threading
 
 __all__ = ('every', )
 
+
+def total_seconds(delta):
+    """
+    Get total seconds of timedelta object. Equivalent to
+    timedelta.total_seconds(), which was introduced in Python 2.7.
+    """
+    us = (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6)
+    return us / 1000000.0
 
 def handle_sigint(signal, frame):
     """
@@ -41,7 +50,7 @@ def every(*args, **kwargs):
     hours, weeks. This decorator is intended for functions with side effects;
     the return value is discarded.
     """
-    interval = timedelta(*args, **kwargs).total_seconds()
+    interval = total_seconds(timedelta(*args, **kwargs))
     def decorator(func):
         def poll():
             func()
