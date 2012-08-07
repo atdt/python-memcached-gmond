@@ -30,6 +30,7 @@ def total_seconds(delta):
     us = (delta.microseconds + (delta.seconds + delta.days * 24 * 3600) * 10**6)
     return us / 1000000.0
 
+
 def handle_sigint(signal, frame):
     """
     Attempt to kill all child threads and exit. Installing this as a sigint
